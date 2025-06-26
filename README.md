@@ -1,40 +1,23 @@
-import pymupdf4llm
-import pathlib
+from langchain_text_splitters import MarkdownTextSplitter
 
-def pdf_to_markdown(pdf_path: str, md_output_path: str, *, pages=None, write_images=False, image_path="images", image_format="png", dpi=150):
-    """
-    Convert a PDF to Markdown.
-    
-    Args:
-        pdf_path: Path to the PDF file.
-        md_output_path: Path to save the output Markdown.
-        pages: Optional list of 0-based page numbers to include.
-        write_images: Whether to extract images and reference them in Markdown.
-        image_path: Directory to store extracted images.
-        image_format: Format of extracted images (e.g., "png", "jpg").
-        dpi: Resolution for image extraction.
-    """
-    # Convert PDF to Markdown string
-    md_text = pymupdf4llm.to_markdown(
-        doc=pdf_path,
-        pages=pages,
-        write_images=write_images,
-        image_path=image_path,
-        image_format=image_format,
-        dpi=dpi
-    )
-    
-    # Save to markdown file
-    pathlib.Path(md_output_path).write_text(md_text, encoding="utf-8")
-    print(f"✅ Markdown saved to {md_output_path}")
+def split_markdown(md_file_path: str, chunk_size=500, chunk_overlap=50):
+    # Load markdown content
+    with open(md_file_path, "r", encoding="utf-8") as file:
+        markdown_text = file.read()
 
+    # Initialize MarkdownTextSplitter
+    splitter = MarkdownTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+    
+    # Split markdown into chunks
+    chunks = splitter.split_text(markdown_text)
+
+    # Display chunk summary
+    print(f"✅ Total Chunks: {len(chunks)}")
+    for i, chunk in enumerate(chunks[:5]):
+        print(f"\n--- Chunk {i+1} ---\n{chunk[:300]}...")  # Preview first 300 characters
+
+    return chunks
+
+# Example usage
 if __name__ == "__main__":
-    pdf_to_markdown(
-        pdf_path="input.pdf",
-        md_output_path="output.md",
-        pages=None,                 # process all pages
-        write_images=True,          # extract images
-        image_path="images",        # store in ./images/
-        image_format="png",
-        dpi=150
-    )
+    chunks = split_markdown("output.md")
